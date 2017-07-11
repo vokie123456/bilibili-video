@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/QcloudApi/qcloud_sign_golang"
 	"github.com/jinzhu/configor"
 	"github.com/tidwall/gjson"
 	"github.com/valyala/fasthttp"
 	"strconv"
 	"sync"
+	"github.com/QcloudApi/qcloud_sign_golang"
+	"time"
 )
 
 var Config = struct {
@@ -20,7 +21,7 @@ var Config = struct {
 func stat(url string) {
 	configor.Load(&Config, "./config.yml")
 
-	// 替换实际的 SecretId 和 SecretKey
+	//替换实际的 SecretId 和 SecretKey
 	secretId := Config.Qcloud.SecretId
 	secretKey := Config.Qcloud.SecretKey
 
@@ -29,10 +30,12 @@ func stat(url string) {
 
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
-	req.SetRequestURI(url + "1")
+	req.SetRequestURI(url)
 	fasthttp.Do(req, resp)
 	json := gjson.ParseBytes(resp.Body())
+	fmt.Println(json)
 	if json.Get("code").Int() == 0 {
+		fmt.Println(json.Get("data").String())
 		SendParams := map[string]interface{}{"Region": "sh", "Action": "SendMessage", "queueName": "Videostat", "msgBody": json.Get("data").String()}
 		SendData, err := QcloudApi.SendRequest("cmq-queue-sh", SendParams, config)
 		if err != nil {
@@ -46,7 +49,7 @@ func stat(url string) {
 
 func main() {
 	taskChan := make(chan int)
-	TCount := 18
+	TCount := 1
 	var wg sync.WaitGroup //创建一个sync.WaitGroup
 	go func() {
 		for i := 0; i < 20000000; i++ {
@@ -69,12 +72,13 @@ func main() {
 							fmt.Printf("任务失败：工作者i=%v, task=%v, err=%v\r\n", i, task, err)
 						}
 					}()
-					url := "http://api.bilibili.com/archive_stat/stat?&aid=" + strconv.Itoa(i)
+					url := "http://api.bilibili.com/archive_stat/stat?&aid=" + strconv.Itoa(task)
 					stat(url)
+					fmt.Println(url)
+					time.Sleep(1 * time.Second)
 				}()
 			}
 		}()
 	}
 	wg.Wait()
-
 }
