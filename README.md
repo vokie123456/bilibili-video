@@ -4,15 +4,5 @@
 # Usage:
   默认使用mysql数据库，在同文件下建立config.yml文件 
   默认使用qcloud的消息队列，需要qcloud的两个密钥来鉴权
-  格式如：</br>
-  db:</br>
-      host: </br>
-      port: </br>
-      user: </br>
-      password: </br>
-      database: </br>
-  qcloud:</br>
-      secretid: </br>
-      secretkey: </br>
-     
-      
+  在config.yml里面根据提示填完相关信息
+
